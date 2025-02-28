@@ -23,11 +23,38 @@
             font-size: 24px;
             margin-bottom: 10px;
         }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div id="score">Pontos: 0</div>
     <canvas id="gameCanvas" width="600" height="600"></canvas>
+    <div class="controls">
+        <button onclick="changeDirection('up')">⬆️</button>
+        <div class="row">
+            <button onclick="changeDirection('left')">⬅️</button>
+            <button onclick="changeDirection('down')">⬇️</button>
+            <button onclick="changeDirection('right')">➡️</button>
+        </div>
+    </div>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
@@ -113,17 +140,24 @@
 
         function increaseSpeed() {
             if (speed > 10) {
-                speed -= 20;
+                speed -= 15;
                 clearInterval(interval);
                 interval = setInterval(gameLoop, speed);
             }
         }
 
+        function changeDirection(newDirection) {
+            if (newDirection === "right" && direction !== "left") direction = "right";
+            if (newDirection === "left" && direction !== "right") direction = "left";
+            if (newDirection === "up" && direction !== "down") direction = "up";
+            if (newDirection === "down" && direction !== "up") direction = "down";
+        }
+
         document.addEventListener("keydown", event => {
-            if (event.key === "ArrowRight" && direction !== "left") direction = "right";
-            if (event.key === "ArrowLeft" && direction !== "right") direction = "left";
-            if (event.key === "ArrowUp" && direction !== "down") direction = "up";
-            if (event.key === "ArrowDown" && direction !== "up") direction = "down";
+            if (event.key === "ArrowRight") changeDirection("right");
+            if (event.key === "ArrowLeft") changeDirection("left");
+            if (event.key === "ArrowUp") changeDirection("up");
+            if (event.key === "ArrowDown") changeDirection("down");
         });
 
         interval = setInterval(gameLoop, speed);
