@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Cobrinha 3D</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 90vh;
+            background-color: #222;
+            flex-direction: column;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            background-color: black;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+        #score {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Pontos: 0</div>
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreDisplay = document.getElementById("score");
+        
+        let snake = [{ x: 200, y: 200 }];
+        let direction = "right";
+        let food = { x: Math.floor(Math.random() * 30) * 20, y: Math.floor(Math.random() * 30) * 20 };
+        let score = 0;
+        let speed = 100;
+        let interval;
+
+        function drawSnake() {
+            ctx.fillStyle = "lime";
+            ctx.strokeStyle = "darkgreen";
+            snake.forEach((segment, index) => {
+                let gradient = ctx.createLinearGradient(segment.x, segment.y, segment.x + 20, segment.y + 20);
+                gradient.addColorStop(0, "#00ff00");
+                gradient.addColorStop(1, "#003300");
+                ctx.fillStyle = gradient;
+                ctx.fillRect(segment.x, segment.y, 20, 20);
+                ctx.strokeRect(segment.x, segment.y, 20, 20);
+            });
+        }
+
+        function drawFood() {
+            ctx.fillStyle = "red";
+            ctx.beginPath();
+            ctx.arc(food.x + 10, food.y + 10, 10, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function moveSnake() {
+            let head = { ...snake[0] };
+            if (direction === "right") head.x += 20;
+            if (direction === "left") head.x -= 20;
+            if (direction === "up") head.y -= 20;
+            if (direction === "down") head.y += 20;
+            
+            // Teletransporte nas bordas
+            if (head.x < 0) head.x = canvas.width - 20;
+            if (head.x >= canvas.width) head.x = 0;
+            if (head.y < 0) head.y = canvas.height - 20;
+            if (head.y >= canvas.height) head.y = 0;
+            
+            // Verifica colisão com o próprio corpo
+            if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                alert("Game Over!");
+                resetGame();
+                return;
+            }
+            
+            snake.unshift(head);
+            if (head.x === food.x && head.y === food.y) {
+                score += 1;
+                scoreDisplay.textContent = "Pontos: " + score;
+                food = { x: Math.floor(Math.random() * 30) * 20, y: Math.floor(Math.random() * 30) * 20 };
+                
+                if (score % 5 === 0) {
+                    increaseSpeed();
+                }
+            } else {
+                snake.pop();
+            }
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawFood();
+            moveSnake();
+            drawSnake();
+        }
+
+        function resetGame() {
+            snake = [{ x: 200, y: 200 }];
+            direction = "right";
+            score = 0;
+            scoreDisplay.textContent = "Pontos: 0";
+            speed = 100;
+            clearInterval(interval);
+            interval = setInterval(gameLoop, speed);
+        }
+
+        function increaseSpeed() {
+            if (speed > 10) {
+                speed -= 20;
+                clearInterval(interval);
+                interval = setInterval(gameLoop, speed);
+            }
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight" && direction !== "left") direction = "right";
+            if (event.key === "ArrowLeft" && direction !== "right") direction = "left";
+            if (event.key === "ArrowUp" && direction !== "down") direction = "up";
+            if (event.key === "ArrowDown" && direction !== "up") direction = "down";
+        });
+
+        interval = setInterval(gameLoop, speed);
+    </script>
+</body>
+</html>
