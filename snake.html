@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Cobrinha 3D</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 90vh;
+            background-color: #222;
+            flex-direction: column;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            background-color: black;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+        #score {
+            font-size: 24px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .row {
+            display: flex;
+            gap: 80px;
+        }
+        button {
+            width: 80px;
+            height: 80px;
+            font-size: 50px;
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <p></p>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="score">Pontos: 0</div>
+    <div class="controls">
+        <button onclick="changeDirection('up')">⬆️</button>
+        <div class="row">
+            <button onclick="changeDirection('left')">⬅️</button>
+            <button onclick="changeDirection('right')">➡️</button>
+        </div>
+        <div class="row">
+            <button onclick="changeDirection('down')">⬇️</button>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreDisplay = document.getElementById("score");
+        
+        const gridSize = 20; // Definindo o tamanho da grade corretamente
+        let snake = [{ x: 200, y: 200 }];
+        let direction = "right";
+        let food = generateFood();
+        let score = 0;
+        let speed = 150;
+        let interval;
+
+        function drawSnake() {
+            ctx.fillStyle = "lime";
+            ctx.strokeStyle = "darkgreen";
+            snake.forEach((segment) => {
+                let gradient = ctx.createLinearGradient(segment.x, segment.y, segment.x + gridSize, segment.y + gridSize);
+                gradient.addColorStop(0, "#00ff00");
+                gradient.addColorStop(1, "#003300");
+                ctx.fillStyle = gradient;
+                ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
+                ctx.strokeRect(segment.x, segment.y, gridSize, gridSize);
+            });
+        }
+
+        function drawFood() {
+            ctx.fillStyle = "red";
+            ctx.beginPath();
+            ctx.arc(food.x + gridSize / 2, food.y + gridSize / 2, gridSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function moveSnake() {
+            let head = { ...snake[0] };
+            if (direction === "right") head.x += gridSize;
+            if (direction === "left") head.x -= gridSize;
+            if (direction === "up") head.y -= gridSize;
+            if (direction === "down") head.y += gridSize;
+            
+            // Teletransporte nas bordas
+            if (head.x < 0) head.x = canvas.width - gridSize;
+            if (head.x >= canvas.width) head.x = 0;
+            if (head.y < 0) head.y = canvas.height - gridSize;
+            if (head.y >= canvas.height) head.y = 0;
+            
+            // Verifica colisão com o próprio corpo
+            if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                alert("Game Over!");
+                resetGame();
+                return;
+            }
+            
+            snake.unshift(head);
+            if (head.x === food.x && head.y === food.y) {
+                score += 1;
+                scoreDisplay.textContent = "Pontos: " + score;
+                food = generateFood();
+                
+                if (score % 5 === 0) {
+                    increaseSpeed();
+                }
+            } else {
+                snake.pop();
+            }
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawFood();
+            moveSnake();
+            drawSnake();
+        }
+
+        function resetGame() {
+            snake = [{ x: 200, y: 200 }];
+            direction = "right";
+            score = 0;
+            scoreDisplay.textContent = "Pontos: 0";
+            speed = 100;
+            clearInterval(interval);
+            interval = setInterval(gameLoop, speed);
+        }
+
+        function increaseSpeed() {
+            if (speed > 10) {
+                speed -= 20;
+                clearInterval(interval);
+                interval = setInterval(gameLoop, speed);
+            }
+        }
+
+        function changeDirection(newDirection) {
+            if (newDirection === "right" && direction !== "left") direction = "right";
+            if (newDirection === "left" && direction !== "right") direction = "left";
+            if (newDirection === "up" && direction !== "down") direction = "up";
+            if (newDirection === "down" && direction !== "up") direction = "down";
+            moveSnake(); // Faz a cobra se mover imediatamente após mudar a direção
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowRight") changeDirection("right");
+            if (event.key === "ArrowLeft") changeDirection("left");
+            if (event.key === "ArrowUp") changeDirection("up");
+            if (event.key === "ArrowDown") changeDirection("down");
+        });
+
+        function generateFood() {
+            return {
+                x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize,
+                y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize
+            };
+        }
+
+        interval = setInterval(gameLoop, speed);
+    </script>
+</body>
+</html>
