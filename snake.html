@@ -134,6 +134,7 @@
             
             // Verifica colisão com o próprio corpo
             if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                backgroundMusic.pause();
                 gameOverSound.play();
                 alert("Game Over!");
                 resetGame();
