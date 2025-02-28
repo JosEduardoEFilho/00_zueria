@@ -46,8 +46,8 @@
     </style>
 </head>
 <body>
-    
-    <canvas id="gameCanvas" width="600" height="600"></canvas>
+    <p></p>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
     <div id="score">Pontos: 0</div>
     <div class="controls">
         <button onclick="changeDirection('up')">⬆️</button>
@@ -64,9 +64,10 @@
         const ctx = canvas.getContext("2d");
         const scoreDisplay = document.getElementById("score");
         
+        const gridSize = 20; // Definindo o tamanho da grade corretamente
         let snake = [{ x: 200, y: 200 }];
         let direction = "right";
-        let food = { x: Math.floor(Math.random() * 30) * 20, y: Math.floor(Math.random() * 30) * 20 };
+        let food = generateFood();
         let score = 0;
         let speed = 100;
         let interval;
@@ -74,34 +75,34 @@
         function drawSnake() {
             ctx.fillStyle = "lime";
             ctx.strokeStyle = "darkgreen";
-            snake.forEach((segment, index) => {
-                let gradient = ctx.createLinearGradient(segment.x, segment.y, segment.x + 20, segment.y + 20);
+            snake.forEach((segment) => {
+                let gradient = ctx.createLinearGradient(segment.x, segment.y, segment.x + gridSize, segment.y + gridSize);
                 gradient.addColorStop(0, "#00ff00");
                 gradient.addColorStop(1, "#003300");
                 ctx.fillStyle = gradient;
-                ctx.fillRect(segment.x, segment.y, 20, 20);
-                ctx.strokeRect(segment.x, segment.y, 20, 20);
+                ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
+                ctx.strokeRect(segment.x, segment.y, gridSize, gridSize);
             });
         }
 
         function drawFood() {
             ctx.fillStyle = "red";
             ctx.beginPath();
-            ctx.arc(food.x + 10, food.y + 10, 10, 0, Math.PI * 2);
+            ctx.arc(food.x + gridSize / 2, food.y + gridSize / 2, gridSize / 2, 0, Math.PI * 2);
             ctx.fill();
         }
 
         function moveSnake() {
             let head = { ...snake[0] };
-            if (direction === "right") head.x += 20;
-            if (direction === "left") head.x -= 20;
-            if (direction === "up") head.y -= 20;
-            if (direction === "down") head.y += 20;
+            if (direction === "right") head.x += gridSize;
+            if (direction === "left") head.x -= gridSize;
+            if (direction === "up") head.y -= gridSize;
+            if (direction === "down") head.y += gridSize;
             
             // Teletransporte nas bordas
-            if (head.x < 0) head.x = canvas.width - 30;
+            if (head.x < 0) head.x = canvas.width - gridSize;
             if (head.x >= canvas.width) head.x = 0;
-            if (head.y < 0) head.y = canvas.height - 30;
+            if (head.y < 0) head.y = canvas.height - gridSize;
             if (head.y >= canvas.height) head.y = 0;
             
             // Verifica colisão com o próprio corpo
@@ -115,7 +116,7 @@
             if (head.x === food.x && head.y === food.y) {
                 score += 1;
                 scoreDisplay.textContent = "Pontos: " + score;
-                food = { x: Math.floor(Math.random() * 30) * 20, y: Math.floor(Math.random() * 30) * 20 };
+                food = generateFood();
                 
                 if (score % 5 === 0) {
                     increaseSpeed();
@@ -155,6 +156,7 @@
             if (newDirection === "left" && direction !== "right") direction = "left";
             if (newDirection === "up" && direction !== "down") direction = "up";
             if (newDirection === "down" && direction !== "up") direction = "down";
+            moveSnake(); // Faz a cobra se mover imediatamente após mudar a direção
         }
 
         document.addEventListener("keydown", event => {
@@ -163,6 +165,13 @@
             if (event.key === "ArrowUp") changeDirection("up");
             if (event.key === "ArrowDown") changeDirection("down");
         });
+
+        function generateFood() {
+            return {
+                x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize,
+                y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize
+            };
+        }
 
         interval = setInterval(gameLoop, speed);
     </script>
