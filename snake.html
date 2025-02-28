@@ -3,26 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo da Cobrinha 3D</title>
+    <title>Jogo da Cobrinha</title>
     <style>
         body {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 90vh;
+            height: 100vh;
             background-color: #222;
             flex-direction: column;
             color: white;
             font-family: Arial, sans-serif;
+            margin: 0;
         }
         canvas {
             background-color: black;
             box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            border: 2px solid #00ff00;
         }
         #score {
             font-size: 24px;
             margin-top: 15px;
             margin-bottom: 10px;
+            color: #00ff00;
         }
         .controls {
             display: flex;
@@ -42,11 +45,15 @@
             color: white;
             border: none;
             cursor: pointer;
+            border-radius: 10px;
+            transition: background-color 0.2s;
+        }
+        button:active {
+            background-color: #555;
         }
     </style>
 </head>
 <body>
-    <p></p>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <div id="score">Pontos: 0</div>
     <div class="controls">
@@ -59,12 +66,27 @@
             <button onclick="changeDirection('down')">⬇️</button>
         </div>
     </div>
+    <audio id="backgroundMusic" loop>
+        <source src="https://www.myinstants.com/media/sounds/snake-theme.mp3" type="audio/mpeg">
+        Seu navegador não suporta o elemento de áudio.
+    </audio>
+    <audio id="eatSound">
+        <source src="https://www.myinstants.com/media/sounds/eat-sound.mp3" type="audio/mpeg">
+        Seu navegador não suporta o elemento de áudio.
+    </audio>
+    <audio id="gameOverSound">
+        <source src="https://www.myinstants.com/media/sounds/game-over.mp3" type="audio/mpeg">
+        Seu navegador não suporta o elemento de áudio.
+    </audio>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreDisplay = document.getElementById("score");
-        
-        const gridSize = 20; // Definindo o tamanho da grade corretamente
+        const backgroundMusic = document.getElementById("backgroundMusic");
+        const eatSound = document.getElementById("eatSound");
+        const gameOverSound = document.getElementById("gameOverSound");
+
+        const gridSize = 20;
         let snake = [{ x: 200, y: 200 }];
         let direction = "right";
         let food = generateFood();
@@ -72,24 +94,29 @@
         let speed = 150;
         let interval;
 
+        // Inicia a música de fundo
+        backgroundMusic.play();
+
         function drawSnake() {
-            ctx.fillStyle = "lime";
-            ctx.strokeStyle = "darkgreen";
-            snake.forEach((segment) => {
-                let gradient = ctx.createLinearGradient(segment.x, segment.y, segment.x + gridSize, segment.y + gridSize);
-                gradient.addColorStop(0, "#00ff00");
-                gradient.addColorStop(1, "#003300");
-                ctx.fillStyle = gradient;
-                ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
-                ctx.strokeRect(segment.x, segment.y, gridSize, gridSize);
+            snake.forEach((segment, index) => {
+                // Cria um efeito de textura para a cobra
+                ctx.fillStyle = index === 0 ? "#00ff00" : "#00cc00"; // Cabeça verde clara, corpo verde escuro
+                ctx.beginPath();
+                ctx.arc(segment.x + gridSize / 2, segment.y + gridSize / 2, gridSize / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = "#009900";
+                ctx.stroke();
             });
         }
 
         function drawFood() {
+            // Cria um efeito de brilho para a comida
             ctx.fillStyle = "red";
             ctx.beginPath();
             ctx.arc(food.x + gridSize / 2, food.y + gridSize / 2, gridSize / 2, 0, Math.PI * 2);
             ctx.fill();
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "yellow";
         }
 
         function moveSnake() {
@@ -107,6 +134,7 @@
             
             // Verifica colisão com o próprio corpo
             if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                gameOverSound.play();
                 alert("Game Over!");
                 resetGame();
                 return;
@@ -117,6 +145,7 @@
                 score += 1;
                 scoreDisplay.textContent = "Pontos: " + score;
                 food = generateFood();
+                eatSound.play();
                 
                 if (score % 5 === 0) {
                     increaseSpeed();
@@ -138,14 +167,14 @@
             direction = "right";
             score = 0;
             scoreDisplay.textContent = "Pontos: 0";
-            speed = 100;
+            speed = 150;
             clearInterval(interval);
             interval = setInterval(gameLoop, speed);
         }
 
         function increaseSpeed() {
-            if (speed > 10) {
-                speed -= 20;
+            if (speed > 50) {
+                speed -= 10;
                 clearInterval(interval);
                 interval = setInterval(gameLoop, speed);
             }
@@ -156,7 +185,6 @@
             if (newDirection === "left" && direction !== "right") direction = "left";
             if (newDirection === "up" && direction !== "down") direction = "up";
             if (newDirection === "down" && direction !== "up") direction = "down";
-            moveSnake(); // Faz a cobra se mover imediatamente após mudar a direção
         }
 
         document.addEventListener("keydown", event => {

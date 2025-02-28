@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,21 +16,56 @@
             font-family: Arial, sans-serif;
             margin: 0;
         }
-
         canvas {
             background-color: black;
             border: 2px solid white;
         }
-
         h1 {
             margin-bottom: 20px;
         }
+        .mobile-controls {
+            display: none;
+            margin-top: 20px;
+        }
+        .mobile-controls button {
+            background-color: #444;
+            color: white;
+            border: none;
+            padding: 15px;
+            margin: 5px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .mobile-controls button:active {
+            background-color: #666;
+        }
+        @media (max-width: 600px) {
+            .mobile-controls {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .mobile-controls .row {
+                display: flex;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
-
 <body>
     <h1>Tetris</h1>
     <canvas id="tetrisCanvas" width="300" height="600"></canvas>
+    <div class="mobile-controls">
+        <div class="row">
+            <button id="rotateButton">↻ Girar</button>
+        </div>
+        <div class="row">
+            <button id="leftButton">← Esquerda</button>
+            <button id="downButton">↓ Baixo</button>
+            <button id="rightButton">→ Direita</button>
+        </div>
+    </div>
     <audio id="backgroundMusic" loop>
         <source src="https://www.myinstants.com/media/sounds/tetris-theme.mp3" type="audio/mpeg">
         Seu navegador não suporta o elemento de áudio.
@@ -62,6 +96,26 @@
         let isPaused = false;
 
         const backgroundMusic = document.getElementById("backgroundMusic");
+
+        // Referências aos botões móveis
+        const leftButton = document.getElementById("leftButton");
+        const rightButton = document.getElementById("rightButton");
+        const downButton = document.getElementById("downButton");
+        const rotateButton = document.getElementById("rotateButton");
+
+        // Event listeners para os botões móveis
+        leftButton.addEventListener("click", () => {
+            if (!isPaused && !isGameOver) move(-1);
+        });
+        rightButton.addEventListener("click", () => {
+            if (!isPaused && !isGameOver) move(1);
+        });
+        downButton.addEventListener("click", () => {
+            if (!isPaused && !isGameOver) drop();
+        });
+        rotateButton.addEventListener("click", () => {
+            if (!isPaused && !isGameOver) rotate();
+        });
 
         function randomTetromino() {
             return tetrominoes[Math.floor(Math.random() * tetrominoes.length)];
@@ -176,19 +230,25 @@
         }
 
         document.addEventListener("keydown", event => {
-            if (isGameOver || isPaused) return;
-            if (event.key === "ArrowLeft") move(-1);
-            if (event.key === "ArrowRight") move(1);
-            if (event.key === "ArrowDown") drop();
-            if (event.key === "ArrowUp") rotate();
-            if (event.key === " ") { // Barra de espaço para pausar
-                isPaused = !isPaused;
+            if (isGameOver) return; // Se o jogo acabou, não faz nada
+
+            if (event.key === " ") { // Barra de espaço para pausar/despausar
+                isPaused = !isPaused; // Alterna o estado de pausa
                 if (isPaused) {
                     backgroundMusic.pause();
                 } else {
                     backgroundMusic.play();
                 }
+                return; // Impede que outras ações ocorram ao pausar
             }
+
+            if (isPaused) return; // Se o jogo está pausado, não processa outras teclas
+
+            // Controles do jogo
+            if (event.key === "ArrowLeft") move(-1);
+            if (event.key === "ArrowRight") move(1);
+            if (event.key === "ArrowDown") drop();
+            if (event.key === "ArrowUp") rotate();
         });
 
         function update() {
@@ -208,5 +268,4 @@
         update();
     </script>
 </body>
-
 </html>
